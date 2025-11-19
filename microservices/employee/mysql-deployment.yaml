@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-employee
+  labels:
+    app: mysql-employee
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-employee
+  template:
+    metadata:
+      labels:
+        app: mysql-employee
+    spec:
+      containers:
+      - name: mysql-employee
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-employee-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-employee-secret
+              key: MYSQL_DATABASE
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config 
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc

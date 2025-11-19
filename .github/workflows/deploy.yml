@@ -1,0 +1,79 @@
+name: TeamFlow CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build & Push Employee Service
+      uses: docker/build-push-action@v4
+      with:
+        context: ./microservices/employee
+        push: true
+        tags: nourgharby/teamflow-employee:latest
+
+    - name: Build & Push Payroll Service
+      uses: docker/build-push-action@v4
+      with:
+        context: ./microservices/payroll
+        push: true
+        tags: nourgharby/teamflow-payroll:latest
+
+    - name: Build & Push Department Service
+      uses: docker/build-push-action@v4
+      with:
+        context: ./microservices/department
+        push: true
+        tags: nourgharby/teamflow-department:latest
+
+    - name: Build & Push Frontend
+      uses: docker/build-push-action@v4
+      with:
+        context: ./teamflow-react-frontend
+        push: true
+        tags: nourgharby/teamflow-frontend:latest
+
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure Kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+
+    - name: Apply Kubernetes manifests
+      run: |
+        kubectl apply -f microservices/employee/
+        kubectl apply -f microservices/payroll/
+        kubectl apply -f microservices/department/
+        kubectl apply -f microservices/frontend/

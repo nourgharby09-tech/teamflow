@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-deployment
+  labels:
+    app: employee
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: employee
+  template:
+    metadata:
+      labels:
+        app: employee
+    spec:
+      containers:
+      - name: employee
+        image: teamflow-employee:2.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MYSQL_HOST
+          value: mysql-employee
+        - name: MYSQL_DB
+          valueFrom:
+            secretKeyRef:
+              name: mysql-employee-secret
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          value: root
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-employee-secret
+              key: MYSQL_ROOT_PASSWORD
+        ports:
+        - containerPort: 5001
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-service
+  labels:
+    app: employee
+spec:
+  selector:
+    app: employee
+  ports:
+  - port: 80
+    targetPort: 5001

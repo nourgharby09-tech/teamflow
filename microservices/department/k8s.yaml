@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: department-deployment
+  labels:
+    app: department
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: department
+  template:
+    metadata:
+      labels:
+        app: department
+    spec:
+      containers:
+      - name: department
+        image: teamflow-department:1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5002
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5002
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5002
+          initialDelaySeconds: 10
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: department-service
+  labels:
+    app: department
+spec:
+  selector:
+    app: department
+  ports:
+  - port: 80
+    targetPort: 5002
