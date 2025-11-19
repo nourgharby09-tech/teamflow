@@ -1,3 +1,11 @@
+from flask import Flask
+from prometheus_flask_exporter import PrometheusMetrics
+
+app = Flask(__name__)
+
+# Enable Prometheus metrics
+metrics = PrometheusMetrics(app)
+
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 import mysql.connector
