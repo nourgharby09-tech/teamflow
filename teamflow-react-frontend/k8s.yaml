@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: teamflow-frontend:1.2
+        image: nourgharby/teamflow-frontend:1.2
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5173
