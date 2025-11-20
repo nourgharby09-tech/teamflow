@@ -17,7 +17,7 @@ spec:
       containers:
       - name: employee
         image: teamflow-employee:2.0
-        imagePullPolicy: Alwayss
+        imagePullPolicy: Always
         env:
         - name: MYSQL_HOST
           value: mysql-employee
