@@ -13,7 +13,7 @@ CORS(app)
 # Database configuration
 # ---------------------------------------------------------
 DB_HOST = os.getenv("MYSQL_HOST", "mysql-employee")
-DB_NAME = os.getenv("MYSQL_DB", "employees_db")
+DB_NAME = os.getenv("MYSQL_DATABASE", "employees_db")
 DB_USER = os.getenv("MYSQL_USER", "root")
 DB_PASS = os.getenv("MYSQL_PASSWORD", "root")
 
@@ -27,14 +27,14 @@ def get_conn():
     )
 
 # ---------------------------------------------------------
-# Health check
+# Health check (Kubernetes liveness/readiness)
 # ---------------------------------------------------------
 @app.get("/healthz")
 def health():
     try:
         conn = get_conn()
         conn.close()
-        return {"status": "ok", "service": "employee", "db": "up"}, 200
+        return {"status": "ok", "service": "employee", "db": "connected"}, 200
     except Exception as e:
         return {"status": "down", "error": str(e)}, 500
 
@@ -76,8 +76,10 @@ def get_employee(eid):
     try:
         cur.execute("SELECT * FROM employees WHERE id=%s", (eid,))
         row = cur.fetchone()
+
         if not row:
             abort(404, "employee not found")
+
         return jsonify(row), 200
 
     finally:
@@ -91,19 +93,19 @@ def get_employee(eid):
 def create_employee():
     p = request.get_json(silent=True) or {}
 
-    required_fields = ["first_name", "last_name", "age", "dept_id", "base_salary"]
-    for field in required_fields:
+    required = ["first_name", "last_name", "age", "dept_id", "base_salary"]
+    for field in required:
         if field not in p:
             abort(400, f"Missing field: {field}")
 
     try:
         age = int(p["age"])
         dept_id = int(p["dept_id"])
-        salary = int(p["base_salary"])
+        salary = float(p["base_salary"])
     except:
-        abort(400, "age, dept_id, base_salary must be integers")
+        abort(400, "age, dept_id, base_salary must be numeric")
 
-    hire_date = p.get("hire_date")  # Optional YYYY-MM-DD
+    hire_date = p.get("hire_date")  # Optional
 
     conn = get_conn()
     cur = conn.cursor()
@@ -127,8 +129,8 @@ def create_employee():
 @app.put("/employees/<int:eid>")
 def update_employee(eid):
     p = request.get_json(silent=True) or {}
-
     allowed = ["first_name", "last_name", "age", "dept_id", "base_salary", "hire_date"]
+
     sets = []
     vals = []
 
@@ -138,15 +140,18 @@ def update_employee(eid):
 
         if k in ["age", "dept_id", "base_salary"]:
             try:
-                v = int(v)
+                if k == "base_salary":
+                    v = float(v)
+                else:
+                    v = int(v)
             except:
-                abort(400, f"{k} must be integer")
+                abort(400, f"{k} must be numeric")
 
         sets.append(f"{k}=%s")
         vals.append(v)
 
     if not sets:
-        abort(400, "no valid fields to update")
+        abort(400, "No valid fields to update")
 
     vals.append(eid)
 
@@ -188,7 +193,7 @@ def delete_employee(eid):
         conn.close()
 
 # ---------------------------------------------------------
-# Run locally
+# Run app locally
 # ---------------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
