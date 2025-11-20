@@ -17,7 +17,7 @@ spec:
       containers:
       - name: payroll
         image: teamflow-payroll:1.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 5003
         readinessProbe:
