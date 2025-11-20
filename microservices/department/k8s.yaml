@@ -17,7 +17,7 @@ spec:
       containers:
       - name: department
         image: teamflow-department:1.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 5002
         readinessProbe:
