@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: payroll
-        image: teamflow-payroll:1.0
+        image: nourgharby/teamflow-payroll:1.0
         imagePullPolicy: Always
         ports:
         - containerPort: 5003
