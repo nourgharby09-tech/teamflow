@@ -179,7 +179,7 @@ export default function App() {
       <header className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">TeamFlow – Dashboard RH</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">TeamFlow – Dashboard RH Nour Gharbi RSI BBB</h1>
             <p className="text-sm text-slate-500">
               Gestion centralisée des employés, des départements et des salaires brut / net.
             </p>
