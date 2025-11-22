@@ -1,62 +1,57 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: employee-deployment
+  name: department-deployment
   labels:
-    app: employee
+    app: department
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5002"
+    prometheus.io/path: "/metrics"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: employee
+      app: department
   template:
     metadata:
       labels:
-        app: employee
+        app: department
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5002"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
-      - name: employee
-        image: nourgharby/teamflow-employee:2.0
+      - name: department
+        image: nourgharby/teamflow-department:1.0
         imagePullPolicy: Always
-        env:
-        - name: MYSQL_HOST
-          value: mysql-employee
-        - name: MYSQL_DB
-          valueFrom:
-            secretKeyRef:
-              name: mysql-employee-secret
-              key: MYSQL_DATABASE
-        - name: MYSQL_USER
-          value: root
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-employee-secret
-              key: MYSQL_ROOT_PASSWORD
         ports:
-        - containerPort: 5001
+        - containerPort: 5002
+
         readinessProbe:
           httpGet:
             path: /healthz
-            port: 5001
+            port: 5002
           initialDelaySeconds: 5
           periodSeconds: 10
+
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 5001
+            port: 5002
           initialDelaySeconds: 10
           periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: employee-service
+  name: department-service
   labels:
-    app: employee
+    app: department
 spec:
   selector:
-    app: employee
+    app: department
   ports:
   - port: 80
-    targetPort: 5001
+    targetPort: 5002
